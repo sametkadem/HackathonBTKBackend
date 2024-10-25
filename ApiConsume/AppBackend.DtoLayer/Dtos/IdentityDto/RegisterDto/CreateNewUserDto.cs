@@ -9,10 +9,6 @@ namespace AppBackend.DtoLayer.Dtos.IdentityDto.RegisterDto
 {
     public class CreateNewUserDto
     {
-        [Required(ErrorMessage = "Kullanıcı adı alanı boş geçilemez")]
-        [StringLength(20, ErrorMessage = "Kullanıcı adı en fazla 20 karakter olmalıdır")]
-        public string UserName { get; set; }
-
         [Required(ErrorMessage = "Ad alanı boş geçilemez")]
         public string FirstName { get; set; }
 

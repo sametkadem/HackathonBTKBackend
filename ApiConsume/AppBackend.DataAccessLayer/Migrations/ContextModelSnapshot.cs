@@ -42,6 +42,9 @@ namespace AppBackend.DataAccessLayer.Migrations
                     b.Property<int>("QuestionId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("QuestionsId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -51,6 +54,8 @@ namespace AppBackend.DataAccessLayer.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("QuestionId");
+
+                    b.HasIndex("QuestionsId");
 
                     b.HasIndex("UserId");
 
@@ -69,6 +74,7 @@ namespace AppBackend.DataAccessLayer.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Feedback")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("QuestionId")
@@ -77,7 +83,7 @@ namespace AppBackend.DataAccessLayer.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("UserId")
+                    b.Property<int?>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -195,6 +201,9 @@ namespace AppBackend.DataAccessLayer.Migrations
                     b.Property<string>("QuestionFileUrl")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("QuestionsCategoriesId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -204,6 +213,8 @@ namespace AppBackend.DataAccessLayer.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("QuestionsCategoriesId");
 
                     b.HasIndex("UserId");
 
@@ -402,6 +413,10 @@ namespace AppBackend.DataAccessLayer.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("AppBackend.EntityLayer.Concrete.Questions", null)
+                        .WithMany("Answers")
+                        .HasForeignKey("QuestionsId");
+
                     b.HasOne("AppBackend.EntityLayer.Concrete.Identity.AppUser", "AppUser")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -430,6 +445,10 @@ namespace AppBackend.DataAccessLayer.Migrations
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("AppBackend.EntityLayer.Concrete.QuestionsCategories", null)
+                        .WithMany("Questions")
+                        .HasForeignKey("QuestionsCategoriesId");
 
                     b.HasOne("AppBackend.EntityLayer.Concrete.Identity.AppUser", "AppUser")
                         .WithMany()
@@ -507,8 +526,15 @@ namespace AppBackend.DataAccessLayer.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("AppBackend.EntityLayer.Concrete.Questions", b =>
+                {
+                    b.Navigation("Answers");
+                });
+
             modelBuilder.Entity("AppBackend.EntityLayer.Concrete.QuestionsCategories", b =>
                 {
+                    b.Navigation("Questions");
+
                     b.Navigation("SubCategories");
                 });
 #pragma warning restore 612, 618

@@ -22,6 +22,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />
   </ItemGroup>
 
@@ -30,6 +31,10 @@
     <ProjectReference Include="..\AppBackend.DataAccessLayer\AppBackend.DataAccessLayer.csproj" />
     <ProjectReference Include="..\AppBackend.DtoLayer\AppBackend.DtoLayer.csproj" />
     <ProjectReference Include="..\AppBackend.EntityLayer\AppBackend.EntityLayer.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\uploads\image\questions\" />
   </ItemGroup>
 
 </Project>

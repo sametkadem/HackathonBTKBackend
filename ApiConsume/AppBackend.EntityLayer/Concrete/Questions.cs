@@ -12,8 +12,8 @@ namespace AppBackend.EntityLayer.Concrete
         public int Id { get; set; }
         public int UserId { get; set; }
         public required AppUser AppUser { get; set; }
-        public int? CategoryId { get; set; }
-        public QuestionsCategories Category { get; set; }
+        public int CategoryId { get; set; }
+        public required QuestionsCategories Category { get; set; }
         public string? QuestionFilePath { get; set; }
         public string? QuestionFileName { get; set; }
         public string? QuestionFileType { get; set; }
@@ -22,5 +22,7 @@ namespace AppBackend.EntityLayer.Concrete
         public bool IsApproved { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+
+        public ICollection<Answers> Answers { get; set; } // Cevaplar için ilişki
     }
 }

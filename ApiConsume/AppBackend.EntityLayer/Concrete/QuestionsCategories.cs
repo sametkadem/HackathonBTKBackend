@@ -22,5 +22,7 @@ namespace AppBackend.EntityLayer.Concrete
 
         public ICollection<QuestionsCategories> SubCategories { get; set; } // Alt kategoriler için ilişki
 
+        public ICollection<Questions> Questions { get; set; } // Sorular için ilişki
+
     }
 }

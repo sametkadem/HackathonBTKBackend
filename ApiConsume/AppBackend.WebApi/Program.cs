@@ -54,7 +54,13 @@ builder.Services.AddAuthorization(Options =>
     Options.AddPolicy("User", policy => policy.RequireRole("User"));
 });
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.DefaultBufferSize = 50000; // Varsayýlan tampon boyutu
+    options.JsonSerializerOptions.MaxDepth = 500; // Nesne derinliði limiti
+    options.JsonSerializerOptions.IgnoreNullValues = true; // Null deðerleri yok say
+    options.JsonSerializerOptions.PropertyNameCaseInsensitive = true; // Özellik adlarýnda büyük-küçük harf duyarlýlýðýný kaldýr
+});
 builder.Services.AddDbContext<Context>();
 builder.Services.AddAutoMapper(typeof(Program));
 
@@ -70,17 +76,24 @@ builder.Services.AddScoped<IQuestionsCategoriesService, QuestionsCategoriesManag
 builder.Services.AddScoped<IFeedbacksDal, EfFeedbacksDal>();
 builder.Services.AddScoped<IFeedbacksService, FeedbacksManager>();
 
+builder.Services.AddCors(opt =>
+{
+    opt.AddPolicy("HackathonBTKApiCors", opts =>
+    {
+        opts.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
+
+app.UseStaticFiles();
 
 app.UseAuthorization();
 

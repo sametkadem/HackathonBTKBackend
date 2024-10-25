@@ -208,7 +208,8 @@ namespace AppBackend.DataAccessLayer.Migrations
                     Question = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsApproved = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    QuestionsCategoriesId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -225,6 +226,11 @@ namespace AppBackend.DataAccessLayer.Migrations
                         principalTable: "QuestionsCategories",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Questions_QuestionsCategories_QuestionsCategoriesId",
+                        column: x => x.QuestionsCategoriesId,
+                        principalTable: "QuestionsCategories",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -238,7 +244,8 @@ namespace AppBackend.DataAccessLayer.Migrations
                     Answer = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsApproved = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    QuestionsId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -255,6 +262,11 @@ namespace AppBackend.DataAccessLayer.Migrations
                         principalTable: "Questions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Answers_Questions_QuestionsId",
+                        column: x => x.QuestionsId,
+                        principalTable: "Questions",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -263,9 +275,9 @@ namespace AppBackend.DataAccessLayer.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: true),
                     QuestionId = table.Column<int>(type: "int", nullable: true),
-                    Feedback = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Feedback = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
@@ -284,6 +296,11 @@ namespace AppBackend.DataAccessLayer.Migrations
                 name: "IX_Answers_QuestionId",
                 table: "Answers",
                 column: "QuestionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Answers_QuestionsId",
+                table: "Answers",
+                column: "QuestionsId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Answers_UserId",
@@ -338,6 +355,11 @@ namespace AppBackend.DataAccessLayer.Migrations
                 name: "IX_Questions_CategoryId",
                 table: "Questions",
                 column: "CategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Questions_QuestionsCategoriesId",
+                table: "Questions",
+                column: "QuestionsCategoriesId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Questions_UserId",

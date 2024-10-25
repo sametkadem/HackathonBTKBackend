@@ -91,7 +91,6 @@ namespace AppBackend.WebApi.Controllers.QuestionsController
                 {
                     return BadRequest(new { Status = 0, Message = "Kategori bulunamadı" });
                 }
-
                 existingCategory.Data.Name = questionsCategoryDto.Name;
                 existingCategory.Data.UpdatedAt = DateTime.Now;
                 var result = await _questionsCategoriesService.TUpdate(existingCategory.Data);
