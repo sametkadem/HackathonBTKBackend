@@ -9,7 +9,7 @@ namespace AppBackend.DtoLayer.Dtos.QuestionsDto
     public class QuestionsUpdateDto
     {
         public int Id { get; set; }
-        public int? CategoryId { get; set; }
         public string? Question { get; set; }
+        public bool OnlyLastAnswer { get; set; } = false;
     }
 }

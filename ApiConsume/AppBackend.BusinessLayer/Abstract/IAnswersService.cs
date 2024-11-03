@@ -1,4 +1,5 @@
-﻿using AppBackend.EntityLayer.Concrete;
+﻿using AppBackend.DataAccessLayer.Common;
+using AppBackend.EntityLayer.Concrete;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,5 +10,6 @@ namespace AppBackend.BusinessLayer.Abstract
 {
     public interface IAnswersService : IGenericService<Answers>
     {
+        Task<OperationResult<IEnumerable<Answers>>> TDeleteAnswersByQuestionIdAsync(int questionId);
     }
 }

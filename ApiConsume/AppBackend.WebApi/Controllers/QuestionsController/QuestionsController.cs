@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq.Expressions;
 
 namespace AppBackend.WebApi.Controllers.QuestionsController
 {
@@ -23,9 +24,11 @@ namespace AppBackend.WebApi.Controllers.QuestionsController
         private readonly IQuestionsService _questionsService;
         private readonly IAnswersService _answersService;
         private readonly IQuestionsCategoriesService _questionsCategoriesService;
+        private readonly IQuestionsSubCategoriesService _questionsSubCategoriesService;
         private readonly IConfiguration _configuration;
-
-        public QuestionsController(UserManager<AppUser> userManager, IMapper mapper, IWebHostEnvironment webHostEnvironment, IQuestionsService questionsService, IAnswersService answersService, IQuestionsCategoriesService questionsCategoriesService, IConfiguration configuration)
+        
+        private readonly string _baseUrl = "https://btkbackend.randevuburada.com/";
+        public QuestionsController(UserManager<AppUser> userManager, IMapper mapper, IWebHostEnvironment webHostEnvironment, IQuestionsService questionsService, IAnswersService answersService, IQuestionsCategoriesService questionsCategoriesService, IQuestionsSubCategoriesService questionsSubCategoriesService, IConfiguration configuration)
         {
             _userManager = userManager;
             _mapper = mapper;
@@ -33,6 +36,7 @@ namespace AppBackend.WebApi.Controllers.QuestionsController
             _questionsService = questionsService;
             _answersService = answersService;
             _questionsCategoriesService = questionsCategoriesService;
+            _questionsSubCategoriesService = questionsSubCategoriesService;
             _configuration = configuration;
         }
 
@@ -98,7 +102,7 @@ namespace AppBackend.WebApi.Controllers.QuestionsController
                     question.QuestionFileName = fileName;
                     question.QuestionFilePath = filePath;
                     question.QuestionFileType = "image/png";
-                    question.QuestionFileUrl = "/uploads/image/questions/" + fileName;
+                    question.QuestionFileUrl = _baseUrl + "uploads/image/questions/" + fileName;
                 }
                 else
                 {
@@ -107,6 +111,7 @@ namespace AppBackend.WebApi.Controllers.QuestionsController
                     question.QuestionFileType = null;
                     question.QuestionFileUrl = null;
                 }
+              
                 var category = await _questionsCategoriesService.TGetById(Convert.ToInt32(questionsAddDto.CategoryId));
                 if (questionsAddDto.CategoryId == 0 || category.Status == "error" || !category.IsSuccess || category.Data == null)
                 {
@@ -115,6 +120,16 @@ namespace AppBackend.WebApi.Controllers.QuestionsController
                     if (category.Status == "error" || !category.IsSuccess || category.Data == null)
                     {
                         return BadRequest(new { Status = 0, Message = "Kategori bulunamadı" });
+                    }
+                }
+                var subCategory = await _questionsSubCategoriesService.TGetById(Convert.ToInt32(questionsAddDto.SubCategoryId));
+                if (questionsAddDto.SubCategoryId == 0 || subCategory.Status == "error" || !subCategory.IsSuccess || subCategory.Data == null)
+                {
+                    questionsAddDto.SubCategoryId = 1;
+                    subCategory = await _questionsSubCategoriesService.TGetById(Convert.ToInt32(questionsAddDto.SubCategoryId));
+                    if (subCategory.Status == "error" || !subCategory.IsSuccess || subCategory.Data == null)
+                    {
+                        return BadRequest(new { Status = 0, Message = "Alt kategori bulunamadı" });
                     }
                 }
                 var questionText = "";
@@ -135,7 +150,7 @@ namespace AppBackend.WebApi.Controllers.QuestionsController
                         return BadRequest(new { Status = 0, Message = "Resim analizi yapılırken bir hata oluştu." + result.Message });
                     }
                 }
-                question.Question = questionText;
+                question.QuestionText = questionText;
                 question.Category = category.Data;
                 question.CategoryId = category.Data.Id;
                 question.UserId = user.Id;
@@ -148,7 +163,7 @@ namespace AppBackend.WebApi.Controllers.QuestionsController
                 if (resultGemini.Status == 1)
                 {
                     var data = resultGemini.Data;
-                    question.Question = questionText;
+                    question.QuestionText = questionText;
                     var insertResult = await _questionsService.TInsert(question);
                     if (insertResult.IsSuccess && insertResult.Status == "success")
                     {
@@ -171,22 +186,30 @@ namespace AppBackend.WebApi.Controllers.QuestionsController
                             var questionListDto = new QuestionsListDto
                             {
                                 Id = item.Id,
-                                QuestionImage = item.QuestionFileUrl,
-                                CategoryName = category?.Data?.Name ?? "Bilinmiyor",
-                                CategoryId = item.CategoryId,
-                                CategoryPath = category?.Data?.Path ?? "Bilinmiyor",
-                                CategoryParentId = category?.Data?.ParentId,
-                                Question = item.Question,
+                                QuestionImage = item.QuestionFileUrl ?? "", // Null kontrolü
+                                Question = item.QuestionText ?? "", // Null kontrolü
+                                Category = new Category // Category nesnesini oluştur
+                                {
+                                    Id = category.Data.Id,
+                                    Name = category.Data.Name ?? "",
+                                    Path = category.Data.Path ?? ""
+                                },
+                                SubCategory = new SubCategory // SubCategory nesnesini oluştur
+                                {
+                                    Id = subCategory.Data.Id,
+                                    Name = subCategory.Data.Name ?? "",
+                                    Path = subCategory.Data.Path ?? ""
+                                },
                                 CreatedAt = item.CreatedAt,
                                 UpdatedAt = item.UpdatedAt,
-                                Answers = new List<AnswerListDto>()
+                                Answers = new List<AnswerListDto>() // Boş bir liste oluştur
                             };
 
-                        
-                                var answerListDto = new AnswerListDto
+
+                            var answerListDto = new AnswerListDto
                                 {
                                     Id = answer.Id,
-                                    Answer = answer.Answer,
+                                    Answer = answer.Answer ?? "",
                                     CreatedAt = answer.CreatedAt,
                                     UpdatedAt = answer.UpdatedAt
                                 };
@@ -201,15 +224,23 @@ namespace AppBackend.WebApi.Controllers.QuestionsController
                             var questionListDto = new QuestionsListDto
                             {
                                 Id = item.Id,
-                                QuestionImage = item.QuestionFileUrl,
-                                CategoryName = category?.Data?.Name ?? "Bilinmiyor",
-                                CategoryId = item.CategoryId,
-                                CategoryPath = category?.Data?.Path ?? "Bilinmiyor",
-                                CategoryParentId = category?.Data?.ParentId,
-                                Question = item.Question,
+                                QuestionImage = item.QuestionFileUrl ?? "", // Null kontrolü
+                                Question = item.QuestionText ?? "", // Null kontrolü
+                                Category = new Category // Category nesnesini oluştur
+                                {
+                                    Id = category.Data.Id,
+                                    Name = category.Data.Name ?? "",
+                                    Path = category.Data.Path ?? ""
+                                },
+                                SubCategory = new SubCategory // SubCategory nesnesini oluştur
+                                {
+                                    Id = subCategory.Data.Id,
+                                    Name = subCategory.Data.Name ?? "",
+                                    Path = subCategory.Data.Path ?? ""
+                                },
                                 CreatedAt = item.CreatedAt,
                                 UpdatedAt = item.UpdatedAt,
-                                Answers = new List<AnswerListDto>()
+                                Answers = new List<AnswerListDto>() // Boş bir liste oluştur
                             };
                             return BadRequest(new { Status = 0, Message = "Cevap eklenirken bir hata oluştu.", Data = questionListDto });
                         }
@@ -260,31 +291,82 @@ namespace AppBackend.WebApi.Controllers.QuestionsController
                     x =>
                         x.UserId == user.Id &&
                         (questionListParamsDto.CategoryId == 0 || x.CategoryId == questionListParamsDto.CategoryId) &&
-                        (string.IsNullOrEmpty(questionListParamsDto.Question) || x.Question.Contains(questionListParamsDto.Question))
+                        (questionListParamsDto.SubCategoryId == 0 || x.SubCategoryId == questionListParamsDto.SubCategoryId) &&
+                        (string.IsNullOrEmpty(questionListParamsDto.Question) || x.QuestionText.Contains(questionListParamsDto.Question))
                 );
+
+                var sortedItems = result.Data.Data;
+                if(questionListParamsDto.OrderBy == "CreatedAt")
+                {
+                    if (questionListParamsDto.OrderDirection == "asc")
+                    {
+                        sortedItems = result.Data.Data.OrderBy(x => x.CreatedAt).ToList();
+                    }
+                    else
+                    {
+                        sortedItems = result.Data.Data.OrderByDescending(x => x.CreatedAt).ToList();
+                    }
+                }
+                else if (questionListParamsDto.OrderBy == "UpdatedAt")
+                {
+                    if (questionListParamsDto.OrderDirection == "asc")
+                    {
+                        sortedItems = result.Data.Data.OrderBy(x => x.UpdatedAt).ToList();
+                    }
+                    else
+                    {
+                        sortedItems = result.Data.Data.OrderByDescending(x => x.UpdatedAt).ToList();
+                    }
+                }else if(questionListParamsDto.OrderBy == "ID")
+                {
+                    if (questionListParamsDto.OrderDirection == "asc")
+                    {
+                        sortedItems = result.Data.Data.OrderBy(x => x.Id).ToList();
+                    }
+                    else
+                    {
+                        sortedItems = result.Data.Data.OrderByDescending(x => x.Id).ToList();
+                    }
+                }
                 if (!result.IsSuccess || result.Status == "error")
                 {
                     return BadRequest(new { Status = 0, Message = result.Messages });
                 }
                 var questionList = new List<QuestionsListDto>();
 
-                foreach (var item in result.Data.Data)
+                foreach (var item in sortedItems)
                 {
                     var category = await _questionsCategoriesService.TGetById(item.CategoryId);
+                    var subCategory = await _questionsSubCategoriesService.TGetById(item.SubCategoryId);                    
                     var answer = await _answersService.TGetByCondition(x => x.QuestionId == item.Id);
-
+                    if (questionListParamsDto.OnlyLastAnswer)
+                    {
+                        answer.Data = answer.Data.OrderByDescending(x => x.Id).Take(1).ToList();
+                    }
+                    else
+                    {
+                        answer.Data = answer.Data.OrderByDescending(x => x.Id).ToList();
+                    }
                     var questionListDto = new QuestionsListDto
                     {
                         Id = item.Id,
-                        QuestionImage = item.QuestionFileUrl,
-                        CategoryName = category?.Data?.Name ?? "Bilinmiyor",
-                        CategoryId = item.CategoryId,
-                        CategoryPath = category?.Data?.Path ?? "Bilinmiyor",
-                        CategoryParentId = category?.Data?.ParentId,
-                        Question = item.Question,
+                        QuestionImage = item.QuestionFileUrl ?? "", // Null kontrolü
+                        Question = item.QuestionText ?? "", // Null kontrolü
+                        Category = new Category // Category nesnesini oluştur
+                        {
+                            Id = category.Data.Id,
+                            Name = category.Data.Name ?? "",
+                            Path = category.Data.Path ?? ""
+                        },
+                        SubCategory = new SubCategory // SubCategory nesnesini oluştur
+                        {
+                            Id = subCategory.Data.Id,
+                            Name = subCategory.Data.Name ?? "",
+                            Path = subCategory.Data.Path ?? ""
+                        },
                         CreatedAt = item.CreatedAt,
                         UpdatedAt = item.UpdatedAt,
-                        Answers = new List<AnswerListDto>()
+                        Answers = new List<AnswerListDto>() // Boş bir liste oluştur
                     };
 
                     foreach (var answerItem in answer.Data)
@@ -292,7 +374,7 @@ namespace AppBackend.WebApi.Controllers.QuestionsController
                         var answerListDto = new AnswerListDto
                         {
                             Id = answerItem.Id,
-                            Answer = answerItem.Answer,
+                            Answer = answerItem.Answer ?? "",
                             CreatedAt = answerItem.CreatedAt,
                             UpdatedAt = answerItem.UpdatedAt
                         };
@@ -345,6 +427,11 @@ namespace AppBackend.WebApi.Controllers.QuestionsController
                         System.IO.File.Delete(filepath);
                     }
                 }
+                var answerdelete = await _answersService.TDeleteAnswersByQuestionIdAsync(id);
+                if (!answerdelete.IsSuccess || answerdelete.Status == "error")
+                {
+                    return BadRequest(new { Status = 0, Message = answerdelete.Messages });
+                }
                 var result = await _questionsService.TDelete(id);
                 if (result.Status == "success" && result.IsSuccess)
                 {
@@ -388,12 +475,60 @@ namespace AppBackend.WebApi.Controllers.QuestionsController
                 {
                     return BadRequest(new { Status = 0, Message = "Soru bulunamadı" });
                 }
+                /*
+                if (questionsUpdateDto.CategoryId == null || questionsUpdateDto.CategoryId == 0)
+                {
+                    questionsUpdateDto.CategoryId = existingQuestion.Data.CategoryId;
+                }
                 var existingCategory = await _questionsCategoriesService.TGetById(Convert.ToInt32(questionsUpdateDto.CategoryId));
-                if (questionsUpdateDto.CategoryId != 0 && (existingCategory.Status == "error" || !existingCategory.IsSuccess || existingCategory.Data == null))
+                if (questionsUpdateDto.CategoryId != null && questionsUpdateDto.CategoryId != 0 && (existingCategory.Status == "error" || !existingCategory.IsSuccess || existingCategory.Data == null))
                 {
                     return BadRequest(new { Status = 0, Message = "Kategori bulunamadı" });
                 }
-                existingQuestion.Data.CategoryId = existingCategory.Data.Id;
+                else
+                {
+                    if(questionsUpdateDto.CategoryId != null)
+                    {
+                        if (questionsUpdateDto.CategoryId != 0 && questionsUpdateDto.CategoryId != existingQuestion.Data.CategoryId)
+                        {
+                            existingQuestion.Data.CategoryId = existingCategory.Data.Id;
+                            existingQuestion.Data.Category = existingCategory.Data;
+                        }
+                        else
+                        {
+                            var existingCategoryDefault = await _questionsCategoriesService.TGetById(1);
+                            existingQuestion.Data.CategoryId = existingCategoryDefault.Data.Id;
+                            existingQuestion.Data.Category = existingCategoryDefault.Data;
+                        }
+                    }
+                }
+                if (questionsUpdateDto.SubCategoryId == null || questionsUpdateDto.SubCategoryId == 0)
+                {
+                    questionsUpdateDto.SubCategoryId = existingQuestion.Data.SubCategoryId;
+                }
+                var existingSubCategory = await _questionsSubCategoriesService.TGetById(Convert.ToInt32(questionsUpdateDto.SubCategoryId));
+                if (questionsUpdateDto.SubCategoryId != null && questionsUpdateDto.SubCategoryId != 0 && (existingSubCategory.Status == "error" || !existingSubCategory.IsSuccess || existingSubCategory.Data == null))
+                {
+                    return BadRequest(new { Status = 0, Message = "Alt kategori bulunamadı" });
+                }
+                else
+                {
+                    if(questionsUpdateDto.SubCategoryId != null)
+                    {
+                        if (questionsUpdateDto.SubCategoryId != 0 && questionsUpdateDto.SubCategoryId != existingQuestion.Data.SubCategoryId)
+                        {
+                            existingQuestion.Data.SubCategoryId = existingSubCategory.Data.Id;
+                            existingQuestion.Data.SubCategory = existingSubCategory.Data;
+                        }
+                        else
+                        {
+                            existingSubCategory = await _questionsSubCategoriesService.TGetById(1);
+                            existingQuestion.Data.SubCategoryId = existingSubCategory.Data.Id;
+                            existingQuestion.Data.SubCategory = existingSubCategory.Data;
+                        }
+                    }
+                }   
+                */
                 if(questionsUpdateDto.Question != null && questionsUpdateDto.Question != "" && questionsUpdateDto.Question != "string")
                 {
                  
@@ -415,7 +550,7 @@ namespace AppBackend.WebApi.Controllers.QuestionsController
                         var insertAnswerResult = await _answersService.TInsert(answers);
                         if(insertAnswerResult.IsSuccess && insertAnswerResult.Status == "success")
                         {
-                            existingQuestion.Data.Question = questionsUpdateDto.Question;
+                            existingQuestion.Data.QuestionText = questionsUpdateDto.Question;
                         }
                         else
                         {
@@ -432,26 +567,44 @@ namespace AppBackend.WebApi.Controllers.QuestionsController
                 if (result.Status == "success" && result.IsSuccess)
                 {
                     var item = result.Data;
-                    var answer = await _answersService.TGetByCondition(x => x.QuestionId == item.Id);                  
+                    var answer = await _answersService.TGetByCondition(x => x.QuestionId == item.Id);
+                    if (questionsUpdateDto.OnlyLastAnswer)
+                    {
+                        answer.Data = answer.Data.OrderByDescending(x => x.Id).Take(1).ToList();
+                    }
+                    else
+                    {
+                        answer.Data = answer.Data.OrderByDescending(x => x.Id).ToList();
+                    }
+                    var existingCategory = await _questionsCategoriesService.TGetById(item.CategoryId);
+                    var existingSubCategory = await _questionsSubCategoriesService.TGetById(item.SubCategoryId);
                     var questionListDto = new QuestionsListDto
                     {
                         Id = item.Id,
-                        QuestionImage = item.QuestionFileUrl,
-                        CategoryName = existingCategory?.Data?.Name ?? "Bilinmiyor",
-                        CategoryId = item.CategoryId,
-                        CategoryPath = existingCategory?.Data?.Path ?? "Bilinmiyor",
-                        CategoryParentId = existingCategory?.Data?.ParentId,
-                        Question = item.Question,
+                        QuestionImage = item.QuestionFileUrl ?? "", // Null kontrolü
+                        Question = item.QuestionText ?? "", // Null kontrolü
+                        Category = new Category // Category nesnesini oluştur
+                        {
+                            Id = existingCategory.Data.Id,
+                            Name = existingCategory.Data.Name ?? "",
+                            Path = existingCategory.Data.Path ?? ""
+                        },
+                        SubCategory = new SubCategory // SubCategory nesnesini oluştur
+                        {
+                            Id = existingSubCategory.Data.Id,
+                            Name = existingSubCategory.Data.Name ?? "",
+                            Path = existingSubCategory.Data.Path ?? ""
+                        },
                         CreatedAt = item.CreatedAt,
                         UpdatedAt = item.UpdatedAt,
-                        Answers = new List<AnswerListDto>()
+                        Answers = new List<AnswerListDto>() // Boş bir liste oluştur
                     };
                     foreach (var answerItem in answer.Data)
                     {
                         var answerListDto = new AnswerListDto
                         {
                             Id = answerItem.Id,
-                            Answer = answerItem.Answer,
+                            Answer = answerItem.Answer ?? "",
                             CreatedAt = answerItem.CreatedAt,
                             UpdatedAt = answerItem.UpdatedAt
                         };

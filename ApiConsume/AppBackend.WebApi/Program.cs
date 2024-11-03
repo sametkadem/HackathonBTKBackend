@@ -76,6 +76,9 @@ builder.Services.AddScoped<IQuestionsCategoriesService, QuestionsCategoriesManag
 builder.Services.AddScoped<IFeedbacksDal, EfFeedbacksDal>();
 builder.Services.AddScoped<IFeedbacksService, FeedbacksManager>();
 
+builder.Services.AddScoped<IQuestionsSubCategoriesDal, EfQuestionsSubCategoriesDal>();
+builder.Services.AddScoped<IQuestionsSubCategoriesService, QuestionsSubCategoriesManager>();
+
 builder.Services.AddCors(opt =>
 {
     opt.AddPolicy("HackathonBTKApiCors", opts =>
@@ -90,6 +93,7 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
+app.UseCors("HackathonBTKApiCors");
 
 app.UseAuthentication();
 
