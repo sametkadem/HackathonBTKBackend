@@ -62,14 +62,13 @@ namespace AppBackend.DataAccessLayer.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     DisplayName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Path = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Path = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ParentId = table.Column<int>(type: "int", nullable: true),
                     IsLeaf = table.Column<bool>(type: "bit", nullable: false),
                     IsRoot = table.Column<bool>(type: "bit", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    QuestionsCategoriesId = table.Column<int>(type: "int", nullable: true)
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -80,11 +79,6 @@ namespace AppBackend.DataAccessLayer.Migrations
                         principalTable: "QuestionsCategories",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_QuestionsCategories_QuestionsCategories_QuestionsCategoriesId",
-                        column: x => x.QuestionsCategoriesId,
-                        principalTable: "QuestionsCategories",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -194,6 +188,40 @@ namespace AppBackend.DataAccessLayer.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "QuestionsSubCategories",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CategoryId = table.Column<int>(type: "int", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DisplayName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Path = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ParentId = table.Column<int>(type: "int", nullable: true),
+                    IsLeaf = table.Column<bool>(type: "bit", nullable: false),
+                    IsRoot = table.Column<bool>(type: "bit", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_QuestionsSubCategories", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_QuestionsSubCategories_QuestionsCategories_CategoryId",
+                        column: x => x.CategoryId,
+                        principalTable: "QuestionsCategories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_QuestionsSubCategories_QuestionsSubCategories_ParentId",
+                        column: x => x.ParentId,
+                        principalTable: "QuestionsSubCategories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Questions",
                 columns: table => new
                 {
@@ -201,15 +229,15 @@ namespace AppBackend.DataAccessLayer.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     UserId = table.Column<int>(type: "int", nullable: false),
                     CategoryId = table.Column<int>(type: "int", nullable: false),
+                    SubCategoryId = table.Column<int>(type: "int", nullable: false),
                     QuestionFilePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     QuestionFileName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     QuestionFileType = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     QuestionFileUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Question = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    QuestionText = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsApproved = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    QuestionsCategoriesId = table.Column<int>(type: "int", nullable: true)
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -227,10 +255,11 @@ namespace AppBackend.DataAccessLayer.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Questions_QuestionsCategories_QuestionsCategoriesId",
-                        column: x => x.QuestionsCategoriesId,
-                        principalTable: "QuestionsCategories",
-                        principalColumn: "Id");
+                        name: "FK_Questions_QuestionsSubCategories_SubCategoryId",
+                        column: x => x.SubCategoryId,
+                        principalTable: "QuestionsSubCategories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -244,8 +273,7 @@ namespace AppBackend.DataAccessLayer.Migrations
                     Answer = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsApproved = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    QuestionsId = table.Column<int>(type: "int", nullable: true)
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -261,12 +289,7 @@ namespace AppBackend.DataAccessLayer.Migrations
                         column: x => x.QuestionId,
                         principalTable: "Questions",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Answers_Questions_QuestionsId",
-                        column: x => x.QuestionsId,
-                        principalTable: "Questions",
-                        principalColumn: "Id");
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -289,18 +312,13 @@ namespace AppBackend.DataAccessLayer.Migrations
                         column: x => x.QuestionId,
                         principalTable: "Questions",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Answers_QuestionId",
                 table: "Answers",
                 column: "QuestionId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Answers_QuestionsId",
-                table: "Answers",
-                column: "QuestionsId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Answers_UserId",
@@ -357,9 +375,9 @@ namespace AppBackend.DataAccessLayer.Migrations
                 column: "CategoryId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Questions_QuestionsCategoriesId",
+                name: "IX_Questions_SubCategoryId",
                 table: "Questions",
-                column: "QuestionsCategoriesId");
+                column: "SubCategoryId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Questions_UserId",
@@ -372,9 +390,14 @@ namespace AppBackend.DataAccessLayer.Migrations
                 column: "ParentId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_QuestionsCategories_QuestionsCategoriesId",
-                table: "QuestionsCategories",
-                column: "QuestionsCategoriesId");
+                name: "IX_QuestionsSubCategories_CategoryId",
+                table: "QuestionsSubCategories",
+                column: "CategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_QuestionsSubCategories_ParentId",
+                table: "QuestionsSubCategories",
+                column: "ParentId");
         }
 
         /// <inheritdoc />
@@ -409,6 +432,9 @@ namespace AppBackend.DataAccessLayer.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
+
+            migrationBuilder.DropTable(
+                name: "QuestionsSubCategories");
 
             migrationBuilder.DropTable(
                 name: "QuestionsCategories");

@@ -12,22 +12,21 @@ using System.Threading.Tasks;
 
 namespace AppBackend.DataAccessLayer.EntityFramework
 {
-    public class EfQuestionsCategoriesDal : GenericRepository<QuestionsCategories>, IQuestionsCategoriesDal
+    public class EfQuestionsSubCategoriesDal : GenericRepository<QuestionsSubCategories>, IQuestionsSubCategoriesDal
     {
         private readonly Context _context;
 
-        public EfQuestionsCategoriesDal(Context context) : base(context)
+        public EfQuestionsSubCategoriesDal(Context context) : base(context)
         {
             _context = context;
         }
 
         // Hiyerarşik tüm kategorileri çekmek için metot
-        public List<QuestionsCategoryListDto> GetAllSubCategoriesWithHierarchy()
+        public List<QuestionsSubCategoryListDto> GetAllSubCategoriesWithHierarchy(int CategoryId)
         {
             // Önce tüm alt kategorileri alıyoruz
-            var allSubCategories = _context.Set<QuestionsCategories>()
-                .Where(sc => sc.IsActive == true)
-                .OrderBy(comparer => comparer.Id)
+            var allSubCategories = _context.Set<QuestionsSubCategories>()
+                .Where(sc => sc.IsActive == true && sc.CategoryId == CategoryId)
                 .ToList();
 
             // Ardından recursive fonksiyon ile tüm hiyerarşiyi oluşturuyoruz
@@ -35,7 +34,7 @@ namespace AppBackend.DataAccessLayer.EntityFramework
         }
 
         // Recursive fonksiyon: ParentId'ye göre alt kategorileri bulur ve iç içe ekler
-        private List<QuestionsCategoryListDto> GetAllLeafSubCategories(int? parentId, List<QuestionsCategories> allSubCategories)
+        private List<QuestionsSubCategoryListDto> GetAllLeafSubCategories(int? parentId, List<QuestionsSubCategories> allSubCategories)
         {
             // ParentId ile eşleşen tüm alt kategorileri buluyoruz
             var subCategories = allSubCategories
@@ -43,12 +42,20 @@ namespace AppBackend.DataAccessLayer.EntityFramework
                 .ToList();
 
             // Her bir alt kategori için tekrar alt kategorilerini buluyoruz
-            var subCategoryDtos = new List<QuestionsCategoryListDto>();
+            var subCategoryDtos = new List<QuestionsSubCategoryListDto>();
+            QuestionsCategories generalCategory = null;
             foreach (var subCategory in subCategories)
             {
-                var dto = new QuestionsCategoryListDto
+                if (generalCategory == null)
+                {
+                    generalCategory = _context.Set<QuestionsCategories>().Where(c => c.Id == subCategory.CategoryId).FirstOrDefault();
+                }
+                var dto = new QuestionsSubCategoryListDto
                 {
                     Id = subCategory.Id,
+                    GeneralId = (generalCategory != null ? generalCategory.Id : 0),
+                    GeneralName = (generalCategory != null ? generalCategory.Name : ""),
+                    GeneralPath = (generalCategory != null ? generalCategory.Path : ""),
                     Name = subCategory.Name,
                     ParentId = subCategory.ParentId,
                     Path = subCategory.Path,

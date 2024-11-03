@@ -12,13 +12,24 @@ namespace AppBackend.DtoLayer.Dtos.QuestionsDto
         public int Id { get; set; }
         public string Question { get; set; }
         public string QuestionImage { get; set; }
-        public string CategoryName { get; set; }
-        public int CategoryId { get; set; }
-        public string CategoryPath { get; set; }
-        public string CategoryParentName { get; set; }
-        public int? CategoryParentId { get; set; }
+        public Category Category { get; set; }
+        public SubCategory SubCategory { get; set; }
         public List<AnswerListDto> Answers { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+    }
+
+    public class Category
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Path { get; set; }
+    }
+
+    public class SubCategory
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Path { get; set; }
     }
 }

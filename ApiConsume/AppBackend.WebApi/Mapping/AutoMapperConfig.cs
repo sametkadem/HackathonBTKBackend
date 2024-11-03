@@ -12,6 +12,7 @@ namespace AppBackend.WebApi.Mapping
             CreateMap<QuestionsCategoriesUpdateDto, QuestionsCategories>().ReverseMap();
             CreateMap<QuestionsAddDto, Questions>().ReverseMap();
             CreateMap<FeedbacksAddDto, Feedbacks>().ReverseMap();
+            CreateMap<QuestionsSubCategoryAddDto, QuestionsSubCategories>().ReverseMap();
         }
     }
 }

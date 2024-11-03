@@ -29,6 +29,11 @@ namespace AppBackend.BusinessLayer.Concrete
             return _answersDal.Delete(id);
         }
 
+        public Task<OperationResult<IEnumerable<Answers>>> TDeleteAnswersByQuestionIdAsync(int questionId)
+        {
+            return _answersDal.DeleteAnswersByQuestionIdAsync(questionId);
+        }
+
         public Task<OperationResult<bool>> TExists(Expression<Func<Answers, bool>> predicate)
         {
             return _answersDal.Exists(predicate);

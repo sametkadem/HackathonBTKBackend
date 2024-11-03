@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AppBackend.DataAccessLayer.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20241024142530_mig1")]
+    [Migration("20241103142502_mig1")]
     partial class mig1
     {
         /// <inheritdoc />
@@ -45,9 +45,6 @@ namespace AppBackend.DataAccessLayer.Migrations
                     b.Property<int>("QuestionId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("QuestionsId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -57,8 +54,6 @@ namespace AppBackend.DataAccessLayer.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("QuestionId");
-
-                    b.HasIndex("QuestionsId");
 
                     b.HasIndex("UserId");
 
@@ -189,9 +184,6 @@ namespace AppBackend.DataAccessLayer.Migrations
                     b.Property<bool>("IsApproved")
                         .HasColumnType("bit");
 
-                    b.Property<string>("Question")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("QuestionFileName")
                         .HasColumnType("nvarchar(max)");
 
@@ -204,7 +196,10 @@ namespace AppBackend.DataAccessLayer.Migrations
                     b.Property<string>("QuestionFileUrl")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("QuestionsCategoriesId")
+                    b.Property<string>("QuestionText")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("SubCategoryId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -217,7 +212,7 @@ namespace AppBackend.DataAccessLayer.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.HasIndex("QuestionsCategoriesId");
+                    b.HasIndex("SubCategoryId");
 
                     b.HasIndex("UserId");
 
@@ -256,11 +251,7 @@ namespace AppBackend.DataAccessLayer.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Path")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("QuestionsCategoriesId")
-                        .HasColumnType("int");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -269,9 +260,56 @@ namespace AppBackend.DataAccessLayer.Migrations
 
                     b.HasIndex("ParentId");
 
-                    b.HasIndex("QuestionsCategoriesId");
-
                     b.ToTable("QuestionsCategories");
+                });
+
+            modelBuilder.Entity("AppBackend.EntityLayer.Concrete.QuestionsSubCategories", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsLeaf")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsRoot")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("ParentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Path")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("ParentId");
+
+                    b.ToTable("QuestionsSubCategories");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
@@ -411,14 +449,10 @@ namespace AppBackend.DataAccessLayer.Migrations
             modelBuilder.Entity("AppBackend.EntityLayer.Concrete.Answers", b =>
                 {
                     b.HasOne("AppBackend.EntityLayer.Concrete.Questions", "Question")
-                        .WithMany()
-                        .HasForeignKey("QuestionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AppBackend.EntityLayer.Concrete.Questions", null)
                         .WithMany("Answers")
-                        .HasForeignKey("QuestionsId");
+                        .HasForeignKey("QuestionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("AppBackend.EntityLayer.Concrete.Identity.AppUser", "AppUser")
                         .WithMany()
@@ -436,7 +470,7 @@ namespace AppBackend.DataAccessLayer.Migrations
                     b.HasOne("AppBackend.EntityLayer.Concrete.Questions", "Question")
                         .WithMany()
                         .HasForeignKey("QuestionId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Question");
                 });
@@ -444,14 +478,16 @@ namespace AppBackend.DataAccessLayer.Migrations
             modelBuilder.Entity("AppBackend.EntityLayer.Concrete.Questions", b =>
                 {
                     b.HasOne("AppBackend.EntityLayer.Concrete.QuestionsCategories", "Category")
-                        .WithMany()
+                        .WithMany("Questions")
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("AppBackend.EntityLayer.Concrete.QuestionsCategories", null)
+                    b.HasOne("AppBackend.EntityLayer.Concrete.QuestionsSubCategories", "SubCategory")
                         .WithMany("Questions")
-                        .HasForeignKey("QuestionsCategoriesId");
+                        .HasForeignKey("SubCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("AppBackend.EntityLayer.Concrete.Identity.AppUser", "AppUser")
                         .WithMany()
@@ -462,18 +498,34 @@ namespace AppBackend.DataAccessLayer.Migrations
                     b.Navigation("AppUser");
 
                     b.Navigation("Category");
+
+                    b.Navigation("SubCategory");
                 });
 
             modelBuilder.Entity("AppBackend.EntityLayer.Concrete.QuestionsCategories", b =>
                 {
                     b.HasOne("AppBackend.EntityLayer.Concrete.QuestionsCategories", "Parent")
-                        .WithMany()
+                        .WithMany("SubCategories")
                         .HasForeignKey("ParentId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("AppBackend.EntityLayer.Concrete.QuestionsCategories", null)
+                    b.Navigation("Parent");
+                });
+
+            modelBuilder.Entity("AppBackend.EntityLayer.Concrete.QuestionsSubCategories", b =>
+                {
+                    b.HasOne("AppBackend.EntityLayer.Concrete.QuestionsCategories", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AppBackend.EntityLayer.Concrete.QuestionsSubCategories", "Parent")
                         .WithMany("SubCategories")
-                        .HasForeignKey("QuestionsCategoriesId");
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Category");
 
                     b.Navigation("Parent");
                 });
@@ -535,6 +587,13 @@ namespace AppBackend.DataAccessLayer.Migrations
                 });
 
             modelBuilder.Entity("AppBackend.EntityLayer.Concrete.QuestionsCategories", b =>
+                {
+                    b.Navigation("Questions");
+
+                    b.Navigation("SubCategories");
+                });
+
+            modelBuilder.Entity("AppBackend.EntityLayer.Concrete.QuestionsSubCategories", b =>
                 {
                     b.Navigation("Questions");
 

@@ -9,7 +9,8 @@ namespace AppBackend.DtoLayer.Dtos.QuestionsDto
 {
     public class QuestionsAddDto
     {
-        public int? CategoryId { get; set; }
+        public int CategoryId { get; set; } = 1;
+        public int SubCategoryId { get; set; } = 1;
         public string? Question { get; set; }
         public IFormFile? QuestionImage { get; set; }
     }
